@@ -13,7 +13,7 @@
   <title>User Management</title>
 </svelte:head>
 
-<div class="flex">
+<div class="flex flex-col">
   <div class="form-widget">
     <Auth
       supabaseClient={supabase}
@@ -23,4 +23,9 @@
       appearance={{ theme: ThemeSupa, style: { input: 'color: #fff' } }}
     />
   </div>
+  <form method="POST" class="p-2">
+    <button class="rounded bg-green-500 px-4 py-2" formaction="?provider=github"
+      >Github Signup</button
+    >
+  </form>
 </div>
