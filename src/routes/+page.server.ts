@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ url, locals: { getSession } }) => {
 };
 
 export const actions: Actions = {
-  default: async ({ url, locals: { supabase } }) => {
+  signin: async ({ url, locals: { supabase } }) => {
     const provider = url.searchParams.get('provider') as Provider;
 
     const { data, error } = await supabase.auth.signInWithOAuth({

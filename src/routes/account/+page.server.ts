@@ -1,61 +1,68 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import { z } from 'zod';
+
+// zod schemas
+const userSchema = z.object({
+  username: z.string(),
+  full_name: z.string(),
+  website: z.string(),
+  avatar_url: z.string()
+});
+
+const editUserSchema = userSchema.extend({
+  avatar_url: userSchema.shape.avatar_url.optional()
+});
 
 export const load = async ({ locals: { supabase, getSession } }) => {
-	const session = await getSession();
+  const session = await getSession();
 
-	if (!session) {
-		throw redirect(303, '/');
-	}
+  if (!session) {
+    throw redirect(303, '/');
+  }
 
-	const { data: profile } = await supabase
-		.from('profiles')
-		.select(`username, full_name, website, avatar_url`)
-		.eq('id', session.user.id)
-		.single();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select(`username, full_name, website, avatar_url`)
+    .eq('id', session.user.id)
+    .single();
 
-	return { session, profile };
+  const form = await superValidate(profile, zod(userSchema));
+
+  return { session, form };
 };
 
 export const actions = {
-	update: async ({ request, locals: { supabase, getSession } }) => {
-		const formData = await request.formData();
-		const fullName = formData.get('fullName') as string;
-		const username = formData.get('username') as string;
-		const website = formData.get('website') as string;
-		const avatarUrl = formData.get('avatarUrl') as string;
+  update: async ({ request, locals: { supabase, getSession } }) => {
+    const form = await superValidate(request, zod(editUserSchema));
 
-		const session = await getSession();
+    const session = await getSession();
 
-		const { error } = await supabase.from('profiles').upsert({
-			id: session?.user.id,
-			full_name: fullName,
-			username,
-			website,
-			avatar_url: avatarUrl,
-			updated_at: new Date()
-		});
+    const { error } = await supabase.from('profiles').upsert({
+      id: session?.user.id,
+      full_name: form.data.full_name,
+      username: form.data.username,
+      website: form.data.website,
+      updated_at: new Date()
+    });
 
-		if (error) {
-			return fail(500, {
-				fullName,
-				username,
-				website,
-				avatarUrl
-			});
-		}
+    if (!form.valid) {
+      return fail(400, { form });
+    }
 
-		return {
-			fullName,
-			username,
-			website,
-			avatarUrl
-		};
-	},
-	signout: async ({ locals: { supabase, getSession } }) => {
-		const session = await getSession();
-		if (session) {
-			await supabase.auth.signOut();
-			throw redirect(303, '/');
-		}
-	}
+    if (error) {
+      return fail(500, { form });
+    }
+
+    return { form };
+  },
+
+  signout: async ({ locals: { supabase, getSession } }) => {
+    const session = await getSession();
+    if (session) {
+      await supabase.auth.signOut();
+      throw redirect(303, '/');
+    }
+  }
 };

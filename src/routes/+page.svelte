@@ -24,8 +24,8 @@
     />
   </div>
   <form method="POST" class="p-2">
-    <button class="rounded bg-green-500 px-4 py-2" formaction="?provider=github"
-      >Github Signup</button
+    <button class="rounded bg-green-500 px-4 py-2" formaction="?/signin&provider=github"
+      >Github</button
     >
   </form>
 </div>

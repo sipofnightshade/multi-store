@@ -24,6 +24,6 @@
   <title>User Management</title>
 </svelte:head>
 
-<div class="container">
+<div class="flex h-screen w-screen items-center justify-center bg-slate-800">
   <slot />
 </div>
